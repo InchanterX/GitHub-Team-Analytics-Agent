@@ -28,7 +28,11 @@ async def _run(settings: Settings) -> None:
     )
     github_repo = GitHubRepositoryImplementation(github_client)
 
-    openai_client = OpenAIClient(api_key=os.getenv("LLM_API_KEY"))
+    openai_client = OpenAIClient(
+        api_key=os.getenv("LLM_API_KEY"),
+        base_url=os.getenv("LLM_API_URL"),
+        model=os.getenv("LLM_MODEL", "gpt-4")
+    )
     llm = OpenAIProvider(openai_client)
 
     analytics_service = AnalyticsService(github_repo)

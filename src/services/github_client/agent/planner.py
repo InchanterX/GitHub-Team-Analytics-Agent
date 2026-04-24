@@ -8,16 +8,10 @@ class Planner:
 
     def plan(self, query: str) -> list[str]:
         prompt = f"""
-        Decide which tools to use.
-
+        You are a planner. Decide which tools to use for the query.
+        Return ONLY a JSON array of tool names, no explanation.
+        Available tools: commits, issues, summary.
         Query: {query}
-
-        Tools:
-        - commits
-        - issues
-        - summary
-
-        Return JSON list.
         """
         response = self._llm.generate_response(prompt)
         try:

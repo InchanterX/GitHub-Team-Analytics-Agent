@@ -16,6 +16,12 @@ class AnalyticsService:
     ) -> dict:
         commits = self._github_repo.get_commits(owner, repo, since, until)
 
+        if not commits:
+            return {
+                "total": 0,
+                "message": f"No commits found for {owner}/{repo} in the specified period"
+            }
+
         return {
             "total": len(commits),
             "top_author": self._top_author(commits),
