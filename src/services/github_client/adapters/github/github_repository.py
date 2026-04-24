@@ -1,7 +1,7 @@
 from src.services.github_client.domain.protocols.github_repository import GitHubRepository
 from src.services.github_client.adapters.github.github_client import GitHubClient
-from src.services.github_client.domain.commit import Commit
-from src.services.github_client.domain.issue import Issue
+from src.services.github_client.models.commit import Commit
+from src.services.github_client.models.issue import Issue
 
 
 class GitHubRepositoryImplementation(GitHubRepository):

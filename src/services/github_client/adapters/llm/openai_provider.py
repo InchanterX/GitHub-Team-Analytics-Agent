@@ -1,5 +1,5 @@
 from src.services.github_client.domain.protocols.llm_provider import LLMProvider
-from src.services.github_client.adapters.openai.openai_client import OpenAIClient
+from src.services.github_client.adapters.llm.openai_client import OpenAIClient
 
 
 class OpenAIProvider(LLMProvider):

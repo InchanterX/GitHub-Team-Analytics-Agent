@@ -4,7 +4,9 @@ import uvicorn
 import sys
 import os
 from fastapi import FastAPI
+from pathlib import Path
 from loguru import logger
+from dotenv import load_dotenv
 from src.services.github_client.api.router import create_router
 from src.services.github_client.domain.analytics_service import AnalyticsService
 from src.services.github_client.adapters.github.github_repository import GitHubRepositoryImplementation
@@ -21,6 +23,10 @@ from src.services.github_client.config import Settings
 
 
 async def _run(settings: Settings) -> None:
+    env_path = Path(__file__).parent.parent / '.env'
+    load_dotenv(env_path)
+    logger.debug(f"GITHUB_TOKEN from env: {os.getenv('GITHUB_TOKEN')[:10]}...")
+
     # Starting service itself with prepared submodules
     github_client = GitHubClient(
         base_url=os.getenv("GITHUB_API_URL", "https://api.github.com"),
@@ -29,9 +35,9 @@ async def _run(settings: Settings) -> None:
     github_repo = GitHubRepositoryImplementation(github_client)
 
     openai_client = OpenAIClient(
-        api_key=os.getenv("LLM_API_KEY"),
-        base_url=os.getenv("LLM_API_URL"),
-        model=os.getenv("LLM_MODEL", "gpt-4")
+        api_key=os.getenv("LLM_API_KEY", "ollama"),
+        base_url=os.getenv("LLM_BASE_URL", "http://localhost:11434/v1"),
+        model=os.getenv("LLM_MODEL", "llama3.2")
     )
     llm = OpenAIProvider(openai_client)
 
