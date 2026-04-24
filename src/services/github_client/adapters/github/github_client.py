@@ -1,13 +1,13 @@
 import os
 import requests
-from src.services.github_client.domain.commit import Commit
-from src.services.github_client.domain.issue import Issue
+from src.services.github_client.models.commit import Commit
+from src.services.github_client.models.issue import Issue
 
 
 class GitHubClient:
-    def __init__(self):
-        self._base_url = "https://api.github.com"
-        self._token = os.getenv("GITHUB_TOKEN")
+    def __init__(self, base_url: str = "https://api.github.com", token: str | None = None):
+        self._base_url = base_url
+        self._token = token
         self._headers = {
             "Authorization": f"Bearer {self._token}",
             "Accept": "application/vnd.github+json"
@@ -25,13 +25,12 @@ class GitHubClient:
                 f"GitHub API error: {response.status_code} - {response.text}")
         return response.json()
 
-    def get_commits(self, owner: str, repo: str, since: str, until: str) -> list[Commit]:
+    def get_commits(self, owner: str, repo: str, since: str, until: str) -> list[dict]:
         params = {
             "since": since,
             "until": until,
             "per_page": 20
         }
-
         raw = self._get(f"/repos/{owner}/{repo}/commits", params=params)
         return [
             {
@@ -43,14 +42,12 @@ class GitHubClient:
             for commit in raw
         ]
 
-    def get_issues(self, owner: str, repo: str) -> list[Issue]:
+    def get_issues(self, owner: str, repo: str) -> list[dict]:
         params = {
             "state": "open",
             "per_page": 20
         }
-
         raw = self._get(f"/repos/{owner}/{repo}/issues", params)
-
         return [
             {
                 "title": issue["title"],

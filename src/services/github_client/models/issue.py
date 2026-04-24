@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Commit:
+class Issue:
     title: str
     author: str
     created_at: str

@@ -1,5 +1,4 @@
 import asyncio
-
 import typer
 import uvicorn
 import sys
@@ -11,36 +10,50 @@ from src.services.github_client.domain.analytics_service import AnalyticsService
 from src.services.github_client.adapters.github.github_repository import GitHubRepositoryImplementation
 from src.services.github_client.adapters.github.github_client import GitHubClient
 from src.services.github_client.adapters.llm.openai_provider import OpenAIProvider
+from src.services.github_client.adapters.llm.openai_client import OpenAIClient
+from src.services.github_client.tools.github_commits import CommitTool
+from src.services.github_client.tools.github_issues import IssueTool
+from src.services.github_client.tools.github_diff_summary import DiffSummaryTool
 from src.services.github_client.agent.executor import Executor
 from src.services.github_client.agent.planner import Planner
 from src.services.github_client.agent.application import Agent
-from src.services.github_client.settings import Settings
+from src.services.github_client.config import Settings
 
 
 async def _run(settings: Settings) -> None:
     # Starting service itself with prepared submodules
     github_client = GitHubClient(
-        base_url=os.getenv("GITHUB_API_URL"),
+        base_url=os.getenv("GITHUB_API_URL", "https://api.github.com"),
         token=os.getenv("GITHUB_TOKEN")
     )
     github_repo = GitHubRepositoryImplementation(github_client)
-    llm = OpenAIProvider(
-        api_key=os.getenv("LLM_API_KEY")
-    )
+
+    openai_client = OpenAIClient(api_key=os.getenv("LLM_API_KEY"))
+    llm = OpenAIProvider(openai_client)
 
     analytics_service = AnalyticsService(github_repo)
-    executor = Executor(analytics_service)
+
+    commit_tool = CommitTool(analytics_service)
+    issue_tool = IssueTool(analytics_service)
+    diff_summary_tool = DiffSummaryTool(llm)
+
+    tools = {
+        "commits": commit_tool,
+        "issues": issue_tool,
+        "summary": diff_summary_tool
+    }
+
+    executor = Executor(tools)
     planner = Planner(llm)
     agent = Agent(planner, executor, llm)
     logger.debug("Analytics Service started")
 
-    # Start Fastapi app and make it able to use all endpoints
+    # Start Fastapi app
     fastapi_app = FastAPI(title="Analytics Service")
     router = create_router(agent)
     fastapi_app.include_router(router)
     logger.debug("HTTP router registered")
 
-    # Starting service of assembled app with prepared parameters using uvicorn
     config = uvicorn.Config(
         fastapi_app,
         host=settings.http_host,
@@ -51,7 +64,7 @@ async def _run(settings: Settings) -> None:
                 settings.http_host, settings.http_port)
 
     try:
-        await asyncio.gather(server.serve())
+        await server.serve()
     finally:
         logger.info("Shutdown complete")
 

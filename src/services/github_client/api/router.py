@@ -7,7 +7,7 @@ def create_router(agent: Agent) -> APIRouter:
     router = APIRouter(prefix="/github", tags=["github"])
 
     @router.get("/analyze")
-    def analyze(query: str, owner: str, repo: str, since: str, until: str):
+    async def analyze(query: str, owner: str, repo: str, since: str, until: str):
         params = {
             "owner": owner,
             "repo": repo,

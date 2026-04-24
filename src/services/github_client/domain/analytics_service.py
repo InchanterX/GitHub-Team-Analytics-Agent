@@ -57,14 +57,17 @@ class AnalyticsService:
     def get_issue(self, owner: str, repo: str) -> list[dict]:
         return self._github_repo.get_issues(owner, repo)
 
-    def summarize_commits(self, owner: str, repo: str, since: str, until: str) -> str:
-        commits = self._github_repo.get_commits(owner, repo, since, until)
+    def analyze_issues(self, owner: str, repo: str) -> dict:
+        issues = self._github_repo.get_issues(owner, repo)
 
-        if not commits:
-            return "No commits found in the given period."
+        return {
+            "total": len(issues),
+            "by_author": self._count_by_author(issues),
+            "open_issues": len([i for i in issues if hasattr(i, 'state') and i.state == 'open'])
+        }
 
-        summary = f"Total commits: {len(commits)}\n"
-        summary += f"Top author: {self._top_author(commits)}\n"
-        summary += f"Peak day: {self._peak_day(commits)}\n"
-
-        return summary
+    def _count_by_author(self, items: list) -> dict[str, int]:
+        stats = {}
+        for item in items:
+            stats[item.author] = stats.get(item.author, 0) + 1
+        return stats
