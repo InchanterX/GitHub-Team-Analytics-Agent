@@ -1,8 +1,7 @@
 Track: A
-
 # GitHub Team Analytics Agent
 
-AI-powered agent for analyzing GitHub repository activity. Built with pure Python, FastAPI, and local LLM (Ollama).
+AI-powered agent for analyzing GitHub repository activity. Built with pure Python, FastAPI, and OpenAI GPT-OSS-20B (free tier).
 
 ## Architecture
 <pre>
@@ -17,15 +16,14 @@ AI-powered agent for analyzing GitHub repository activity. Built with pure Pytho
 </pre>
 
 **Agent Pipeline:**
-User Query -> API Router -> Planner (LLM) → [commits, issues, summary] -> Executor (Tools) -> GitHub API -> Analytics
--> Final LLM Summary -> Response
+User Query -> API Router -> Planner (LLM) -> [commits, issues, summary] -> Executor (Tools) -> GitHub API -> Analytics -> Final LLM Summary -> Response
 
 ## Quick Start
 
-### Dependences
+### Dependencies
 - Python 3.11+
 - uv
-- Ollama (local LLM)
+- OpenAI API key (free tier for gpt-oss-20b)
 - Docker
 
 ### 1. Setup and Run
@@ -37,12 +35,15 @@ cd GitHub-Team-Analytics-Agent
 
 # Setup env
 cp env.example .env
+# Add your OpenAI API key to .env:
+# OPENAI_API_KEY=your_key_here
+# LLM_MODEL=gpt-oss-20b
 
 # Install dependencies and run
-ollama pull llama3.2 && uv sync && uv run python -m src.main run
+uv sync && uv run python -m src.main run
 ```
 
-Web Interface
+## Web Interface
 ```bash
 docker compose up --build
 # Open http://localhost:3000
