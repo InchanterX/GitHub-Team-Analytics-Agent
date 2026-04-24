@@ -7,26 +7,28 @@ class AnalyticsService:
     def __init__(self, github_repo: GitHubRepository):
         self._github_repo = github_repo
 
-    def analyze_commits(
-        self,
-        owner: str,
-        repo: str,
-        since: str,
-        until: str
-    ) -> dict:
+    def analyze_commits(self, owner: str, repo: str, since: str, until: str) -> dict:
         commits = self._github_repo.get_commits(owner, repo, since, until)
 
         if not commits:
-            return {
-                "total": 0,
-                "message": f"No commits found for {owner}/{repo} in the specified period"
-            }
+            return {"total": 0, "message": "No commits found"}
+
+        commit_dates = [commit.date[:10] for commit in commits]
 
         return {
             "total": len(commits),
             "top_author": self._top_author(commits),
             "by_author": self._by_author(commits),
             "peak_day": self._peak_day(commits),
+            "recent_commits": [
+                {
+                    "date": commit.date[:10],
+                    "author": commit.author,
+                    "message": commit.message[:50]
+                }
+                for commit in commits[:5]
+            ],
+            "date_range": f"{commit_dates[-1]} to {commit_dates[0]}" if commit_dates else "unknown"
         }
 
     def _top_author(self, commits: list[Commit]) -> Optional[str]:

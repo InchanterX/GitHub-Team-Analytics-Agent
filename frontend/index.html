@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>GitHub Analytics Agent</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+					Oxygen, Ubuntu, sans-serif;
+				background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+				color: #c9d1d9;
+				min-height: 100vh;
+				padding: 2rem;
+			}
+
+			.container {
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.header {
+				text-align: center;
+				margin-bottom: 2rem;
+			}
+
+			.header h1 {
+				font-size: 2.5rem;
+				background: linear-gradient(135deg, #58a6ff, #bc8cff);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				margin-bottom: 0.5rem;
+			}
+
+			.header p {
+				color: #8b949e;
+				font-size: 1.1rem;
+			}
+
+			.search-box {
+				background: #161b22;
+				border: 1px solid #30363d;
+				border-radius: 12px;
+				padding: 1.5rem;
+				margin-bottom: 1.5rem;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+			}
+
+			.form-group {
+				margin-bottom: 1rem;
+			}
+
+			.form-row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 1rem;
+				margin-bottom: 1rem;
+			}
+
+			label {
+				display: block;
+				margin-bottom: 0.5rem;
+				color: #58a6ff;
+				font-weight: 600;
+				font-size: 0.9rem;
+			}
+
+			input,
+			textarea {
+				width: 100%;
+				padding: 0.75rem;
+				background: #0d1117;
+				border: 1px solid #30363d;
+				border-radius: 8px;
+				color: #c9d1d9;
+				font-size: 0.95rem;
+				transition: border-color 0.2s;
+			}
+
+			input:focus,
+			textarea:focus {
+				outline: none;
+				border-color: #58a6ff;
+				box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+			}
+
+			textarea {
+				resize: vertical;
+				min-height: 80px;
+			}
+
+			button {
+				width: 100%;
+				padding: 0.75rem;
+				background: linear-gradient(135deg, #238636, #2ea043);
+				color: white;
+				border: none;
+				border-radius: 8px;
+				font-size: 1rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: transform 0.1s, box-shadow 0.2s;
+			}
+
+			button:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
+			}
+
+			button:active {
+				transform: translateY(0);
+			}
+
+			button:disabled {
+				background: #21262d;
+				color: #484f58;
+				cursor: not-allowed;
+				transform: none;
+			}
+
+			.loading {
+				display: none;
+				text-align: center;
+				margin: 1rem 0;
+			}
+
+			.loading.active {
+				display: block;
+			}
+
+			.spinner {
+				display: inline-block;
+				width: 40px;
+				height: 40px;
+				border: 3px solid #30363d;
+				border-top-color: #58a6ff;
+				border-radius: 50%;
+				animation: spin 0.8s linear infinite;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.result-box {
+				display: none;
+				background: #161b22;
+				border: 1px solid #30363d;
+				border-radius: 12px;
+				padding: 2rem;
+				margin-top: 1.5rem;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+				animation: slideUp 0.3s ease;
+			}
+
+			.result-box.active {
+				display: block;
+			}
+
+			@keyframes slideUp {
+				from {
+					opacity: 0;
+					transform: translateY(20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.result-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid #30363d;
+			}
+
+			.result-title {
+				font-size: 1.3rem;
+				font-weight: 700;
+				color: #58a6ff;
+			}
+
+			.copy-btn {
+				width: auto;
+				padding: 0.5rem 1rem;
+				font-size: 0.85rem;
+			}
+
+			.result-content {
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				font-family: "SF Mono", "Monaco", "Menlo", monospace;
+				font-size: 0.9rem;
+				line-height: 1.6;
+				color: #c9d1d9;
+				background: #0d1117;
+				padding: 1.5rem;
+				border-radius: 8px;
+				border: 1px solid #30363d;
+				max-height: 600px;
+				overflow-y: auto;
+			}
+
+			.result-content::-webkit-scrollbar {
+				width: 8px;
+			}
+
+			.result-content::-webkit-scrollbar-track {
+				background: #0d1117;
+			}
+
+			.result-content::-webkit-scrollbar-thumb {
+				background: #30363d;
+				border-radius: 4px;
+			}
+
+			.stats-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 1rem;
+				margin-bottom: 1.5rem;
+			}
+
+			.stat-card {
+				background: #0d1117;
+				border: 1px solid #30363d;
+				border-radius: 8px;
+				padding: 1rem;
+				text-align: center;
+			}
+
+			.stat-value {
+				font-size: 2rem;
+				font-weight: 700;
+				color: #58a6ff;
+			}
+
+			.stat-label {
+				font-size: 0.85rem;
+				color: #8b949e;
+				margin-top: 0.25rem;
+			}
+
+			.error-box {
+				background: #490202;
+				border: 1px solid #da3633;
+				border-radius: 12px;
+				padding: 1.5rem;
+				margin-top: 1rem;
+				color: #f85149;
+				display: none;
+			}
+
+			.error-box.active {
+				display: block;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<h1>🔍 GitHub Analytics Agent</h1>
+				<p>AI-powered repository insights</p>
+			</div>
+
+			<div class="search-box">
+				<div class="form-group">
+					<label for="query">What would you like to analyze?</label>
+					<textarea
+						id="query"
+						placeholder="e.g., Show me recent development activity and open issues..."
+					>
+Analyze commit activity and open issues in this repository</textarea
+					>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="owner">Repository Owner</label>
+						<input
+							type="text"
+							id="owner"
+							placeholder="e.g., facebook"
+							value="InchanterX"
+						/>
+					</div>
+					<div class="form-group">
+						<label for="repo">Repository Name</label>
+						<input
+							type="text"
+							id="repo"
+							placeholder="e.g., react"
+							value="GitHub-Team-Analytics-Agent"
+						/>
+					</div>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="since">From Date</label>
+						<input type="date" id="since" value="2026-04-01" />
+					</div>
+					<div class="form-group">
+						<label for="until">Until Date</label>
+						<input type="date" id="until" value="2026-04-30" />
+					</div>
+				</div>
+
+				<button onclick="analyzeRepository()" id="analyzeBtn">
+					🚀 Analyze Repository
+				</button>
+			</div>
+
+			<div class="loading" id="loading">
+				<div class="spinner"></div>
+				<p style="margin-top: 1rem; color: #8b949e">
+					Analyzing repository... This may take 30-90 seconds
+				</p>
+			</div>
+
+			<div class="error-box" id="errorBox"></div>
+
+			<div class="result-box" id="resultBox">
+				<div class="result-header">
+					<span class="result-title">📊 Analysis Results</span>
+					<button class="copy-btn" onclick="copyResults()">📋 Copy</button>
+				</div>
+				<div class="stats-grid" id="statsGrid"></div>
+				<div class="result-content" id="resultContent"></div>
+			</div>
+		</div>
+
+		<script>
+			const API_URL = "http://localhost:8000";
+
+			async function analyzeRepository() {
+				const query = document.getElementById("query").value.trim();
+				const owner = document.getElementById("owner").value.trim();
+				const repo = document.getElementById("repo").value.trim();
+				const since = document.getElementById("since").value;
+				const until = document.getElementById("until").value;
+
+				if (!query || !owner || !repo) {
+					showError("Please fill in all required fields");
+					return;
+				}
+
+				const btn = document.getElementById("analyzeBtn");
+				const loading = document.getElementById("loading");
+				const resultBox = document.getElementById("resultBox");
+				const errorBox = document.getElementById("errorBox");
+
+				btn.disabled = true;
+				loading.classList.add("active");
+				resultBox.classList.remove("active");
+				errorBox.classList.remove("active");
+
+				try {
+					const params = new URLSearchParams({
+						query,
+						owner,
+						repo,
+						since,
+						until,
+					});
+
+					const response = await fetch(`${API_URL}/github/analyze?${params}`);
+
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+					}
+
+					const data = await response.json();
+					displayResults(data);
+				} catch (error) {
+					showError(`Analysis failed: ${error.message}`);
+				} finally {
+					btn.disabled = false;
+					loading.classList.remove("active");
+				}
+			}
+
+			function displayResults(data) {
+				const resultBox = document.getElementById("resultBox");
+				const resultContent = document.getElementById("resultContent");
+				const statsGrid = document.getElementById("statsGrid");
+
+				// Try to parse structured data if it's JSON
+				let displayText = data;
+				let structuredData = null;
+
+				if (typeof data === "string") {
+					// Try to extract JSON from the response
+					const jsonMatch = data.match(/\{[\s\S]*\}/);
+					if (jsonMatch) {
+						try {
+							structuredData = JSON.parse(jsonMatch[0]);
+						} catch (e) {
+							// Not JSON, display as is
+						}
+					}
+				} else if (typeof data === "object") {
+					structuredData = data;
+				}
+
+				// Display stats if we have structured data
+				if (structuredData) {
+					statsGrid.innerHTML = "";
+
+					if (structuredData.commits || structuredData.commits === 0) {
+						const commitData = structuredData.commits;
+						if (commitData.total !== undefined) {
+							addStat("Total Commits", commitData.total);
+						}
+						if (commitData.top_author) {
+							addStat("Top Author", commitData.top_author);
+						}
+						if (commitData.peak_day) {
+							addStat("Peak Day", commitData.peak_day);
+						}
+					}
+
+					if (structuredData.issues || structuredData.issues === 0) {
+						const issueData = structuredData.issues;
+						if (Array.isArray(issueData)) {
+							addStat("Open Issues", issueData.length);
+						} else if (issueData.total !== undefined) {
+							addStat("Open Issues", issueData.total);
+						}
+					}
+				}
+
+				// Format text for display
+				if (typeof data === "object") {
+					displayText = JSON.stringify(data, null, 2);
+				}
+
+				resultContent.textContent = displayText;
+				resultBox.classList.add("active");
+			}
+
+			function addStat(label, value) {
+				const statsGrid = document.getElementById("statsGrid");
+				const card = document.createElement("div");
+				card.className = "stat-card";
+				card.innerHTML = `
+                <div class="stat-value">${value}</div>
+                <div class="stat-label">${label}</div>
+            `;
+				statsGrid.appendChild(card);
+			}
+
+			function showError(message) {
+				const errorBox = document.getElementById("errorBox");
+				errorBox.textContent = "❌ " + message;
+				errorBox.classList.add("active");
+			}
+
+			function copyResults() {
+				const resultContent = document.getElementById("resultContent");
+				navigator.clipboard.writeText(resultContent.textContent).then(() => {
+					const btn = document.querySelector(".copy-btn");
+					const originalText = btn.textContent;
+					btn.textContent = "✅ Copied!";
+					setTimeout(() => (btn.textContent = originalText), 2000);
+				});
+			}
+
+			// Allow Enter key to submit
+			document.addEventListener("keypress", (e) => {
+				if (e.key === "Enter" && !e.shiftKey) {
+					e.preventDefault();
+					analyzeRepository();
+				}
+			});
+		</script>
+	</body>
+</html>
