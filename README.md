@@ -5,6 +5,7 @@ Track: A
 AI-powered agent for analyzing GitHub repository activity. Built with pure Python, FastAPI, and local LLM (Ollama).
 
 ## Architecture
+<pre>
 ├── src/services/github_client/
 │ ├── agent/ # Agent core (Planner, Executor, Application)
 │ ├── tools/ # Tools (CommitTool, IssueTool, DiffSummaryTool)
@@ -13,6 +14,7 @@ AI-powered agent for analyzing GitHub repository activity. Built with pure Pytho
 │ ├── models/ # Data classes (Commit, Issue)
 │ └── api/ # FastAPI router
 └── frontend/ # Web UI
+</pre>
 
 **Agent Pipeline:**
 User Query -> API Router -> Planner (LLM) → [commits, issues, summary] -> Executor (Tools) -> GitHub API -> Analytics
