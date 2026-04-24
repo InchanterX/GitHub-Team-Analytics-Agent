@@ -57,7 +57,7 @@ class GitHubClient:
         params = {
             "since": since,
             "until": until,
-            "per_page": 20
+            "per_page": 100
         }
         raw = self._get(f"/repos/{owner}/{repo}/commits", params=params)
 

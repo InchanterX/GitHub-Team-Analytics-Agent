@@ -4,6 +4,7 @@ import uvicorn
 import sys
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from loguru import logger
 from dotenv import load_dotenv
@@ -45,7 +46,7 @@ async def _run(settings: Settings) -> None:
 
     commit_tool = CommitTool(analytics_service)
     issue_tool = IssueTool(analytics_service)
-    diff_summary_tool = DiffSummaryTool(llm)
+    diff_summary_tool = DiffSummaryTool(analytics_service, llm)
 
     tools = {
         "commits": commit_tool,
@@ -60,6 +61,15 @@ async def _run(settings: Settings) -> None:
 
     # Start Fastapi app
     fastapi_app = FastAPI(title="Analytics Service")
+
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     router = create_router(agent)
     fastapi_app.include_router(router)
     logger.debug("HTTP router registered")
