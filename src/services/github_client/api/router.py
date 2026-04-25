@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from src.services.github_client.agent.application import Agent
 from datetime import datetime
 
@@ -18,7 +18,8 @@ def create_router(agent: Agent) -> APIRouter:
             datetime.fromisoformat(since.replace('Z', '+00:00'))
             datetime.fromisoformat(until.replace('Z', '+00:00'))
         except ValueError:
-            return {"error": "Invalid date format. Use YYYY-MM-DD or ISO 8601"}
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Invalid date format. Use YYYY-MM-DD or ISO 8601")
 
         params = {
             "owner": owner,
