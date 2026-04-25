@@ -1,4 +1,3 @@
-# planner.py
 import json
 from loguru import logger
 from src.services.github_client.domain.protocols.llm_provider import LLMProvider
@@ -9,23 +8,25 @@ class Planner:
         self._llm = llm
 
     def plan(self, query: str) -> list[str]:
-        prompt = f"""You are a task planner for a GitHub analytics agent.
+        prompt = f"""You are a task planner. Select ONLY tools directly relevant to the query.
 
-Available tools and when to use them:
-- "commits" - Use for ANY query about commits, development activity, contributions, code changes, authors, or repository history
-- "issues" - Use for ANY query about issues, bugs, problems, feature requests, or open tasks
-- "summary" - Use when the user wants a comprehensive overview or summary combining multiple aspects
+    Available tools:
+    - "commits": commit history, authors, code changes, development activity
+    - "issues": open issues, bug reports, feature requests
+    - "summary": comprehensive overview, general project analysis, "tell me about the project"
 
-Rules:
-- ALWAYS return at least one tool, never an empty list
-- If the query mentions commits, activity, changes, or development → include "commits"
-- If the query mentions issues, bugs, or problems → include "issues"
-- If the query is vague or asks for general analysis → use ["commits", "issues"]
-- Return ONLY a JSON array, no explanation
+    CRITICAL RULES:
+    - Select ONLY what the user explicitly asks for
+    - "Analyze commit activity" → ONLY ["commits"]
+    - "Show issues" → ONLY ["issues"]
+    - "Repository overview" or "general analysis" → ["commits", "issues"]
+    - If the query mentions ONLY commits → do NOT include "issues"
+    - If the query mentions ONLY issues → do NOT include "commits"
+    - Return ONLY a JSON array: ["commits"] or ["issues"] or ["commits", "issues"]
 
-User query: {query}
+    User query: {query}
 
-Return JSON array of tools:"""
+    Tools to use (JSON array):"""
 
         try:
             response = self._llm.generate_response(prompt)

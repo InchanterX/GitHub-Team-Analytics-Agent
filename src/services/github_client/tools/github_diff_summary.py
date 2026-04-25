@@ -22,8 +22,8 @@ class DiffSummaryTool:
         )
 
         commit_messages = [
-            c.get("message", "")
-            for c in commits_data.get("recent_commits", [])
+            commit.get("message", "")
+            for commit in commits_data.get("recent_commits", [])
         ]
 
         prompt = f"""

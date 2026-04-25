@@ -14,8 +14,7 @@ class GitHubClient:
 
         self._headers = {
             "Authorization": f"Bearer {self._token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28"
+            "Accept": "application/vnd.github+json"
         }
 
         logger.debug(f"GitHub client initialized with base_url={base_url}")
@@ -68,7 +67,9 @@ class GitHubClient:
                     "sha": commit["sha"],
                     "author": commit["commit"]["author"]["name"],
                     "message": commit["commit"]["message"],
-                    "date": commit["commit"]["author"]["date"]
+                    "date": commit["commit"]["author"]["date"],
+                    "verified": commit["commit"].get("verification", {}).get("verified", False),
+                    "files_changed": commit.get("size", 0)
                 })
             except KeyError as e:
                 logger.warning(f"Skipping commit due to missing field: {e}")

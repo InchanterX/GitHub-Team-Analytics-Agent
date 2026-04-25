@@ -13,22 +13,27 @@ class AnalyticsService:
         if not commits:
             return {"total": 0, "message": "No commits found"}
 
-        commit_dates = [commit.date[:10] for commit in commits]
+        verified_count = sum(1 for c in commits if c.verified)
+        total_files_changed = sum(c.files_changed for c in commits)
 
         return {
             "total": len(commits),
             "top_author": self._top_author(commits),
             "by_author": self._by_author(commits),
             "peak_day": self._peak_day(commits),
+            "verified_commits": f"{verified_count}/{len(commits)}",
+            "total_files_changed": total_files_changed,
             "recent_commits": [
                 {
                     "date": commit.date[:10],
                     "author": commit.author,
-                    "message": commit.message[:50]
+                    "message": commit.message[:100],
+                    "verified": commit.verified,
+                    "files_changed": commit.files_changed
                 }
-                for commit in commits[:5]
+                for commit in commits[:50]
             ],
-            "date_range": f"{commit_dates[-1]} to {commit_dates[0]}" if commit_dates else "unknown"
+            "date_range": f"{commits[-1].date[:10]} to {commits[0].date[:10]}" if commits else "unknown"
         }
 
     def _top_author(self, commits: list[Commit]) -> Optional[str]:

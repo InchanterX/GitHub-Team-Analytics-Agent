@@ -16,7 +16,9 @@ class GitHubRepositoryImplementation(GitHubRepository):
                 sha=commit['sha'],
                 author=commit['author'],
                 message=commit['message'],
-                date=commit['date']
+                date=commit['date'],
+                verified=commit.get('verified', False),
+                files_changed=commit.get('files_changed', 0)
             ) for commit in raw
         ]
 
